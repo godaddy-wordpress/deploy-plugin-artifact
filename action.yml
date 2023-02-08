@@ -47,8 +47,6 @@ runs:
       working-directory: ${{ env.DEPLOY_DIRECTORY }}
       run: |
         svn co http://svn.wp-plugins.org/${{ inputs.plugin-name }} \
-          --username "${{ inputs.svn-username }}" \
-          --password "${{ inputs.svn-password }}" \
           --depth immediates \
           --non-interactive \
           --no-auth-cache
@@ -86,10 +84,13 @@ runs:
     - name: 'Deploying changes to WordPress.org repository'
       shell: bash
       working-directory: ${{ env.PLUGIN_DIRECTORY }}
+      env:
+        WP_USERNAME: ${{ inputs.svn-username }}
+        WP_PASSWORD: ${{ inputs.svn-password }}
       run: |
         svn commit \
-          --username "${{ inputs.svn-username }}" \
-          --password "${{ inputs.svn-password }}" \
+          --username "${{ env.WP_USERNAME }}" \
+          --password "${{ env.WP_PASSWORD }}" \
           --message "Deploy version ${{ inputs.plugin-version }}" \
           --no-auth-cache \
           --non-interactive
