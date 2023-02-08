@@ -85,8 +85,8 @@ runs:
       shell: bash
       working-directory: ${{ env.PLUGIN_DIRECTORY }}
       env:
-        WP_USERNAME: ${{ inputs.svn-username }}
-        WP_PASSWORD: ${{ inputs.svn-password }}
+        WP_USERNAME: "${{ inputs.svn-username }}"
+        WP_PASSWORD: "${{ inputs.svn-password }}"
       run: |
         svn commit \
           --username "${{ env.WP_USERNAME }}" \
