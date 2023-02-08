@@ -89,8 +89,8 @@ runs:
         WP_PASSWORD: "${{ inputs.svn-password }}"
       run: |
         svn commit \
-          --username "${{ env.WP_USERNAME }}" \
           --password "${{ env.WP_PASSWORD }}" \
+          --username "${{ env.WP_USERNAME }}" \
           --message "Deploy version ${{ inputs.plugin-version }}" \
           --no-auth-cache \
           --non-interactive
