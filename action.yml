@@ -85,12 +85,12 @@ runs:
       shell: bash
       working-directory: ${{ env.PLUGIN_DIRECTORY }}
       env:
-        WP_USERNAME: "${{ inputs.svn-username }}"
-        WP_PASSWORD: "${{ inputs.svn-password }}"
+        WP_USERNAME: ${{ inputs.svn-username }}
+        WP_PASSWORD: ${{ inputs.svn-password }}
       run: |
         svn commit \
-          --password "${{ env.WP_PASSWORD }}" \
-          --username "${{ env.WP_USERNAME }}" \
+          --password "$WP_PASSWORD" \
+          --username "$WP_USERNAME" \
           --message "Deploy version ${{ inputs.plugin-version }}" \
           --no-auth-cache \
           --non-interactive
