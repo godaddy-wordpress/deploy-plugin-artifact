@@ -18,8 +18,8 @@ jobs:
           plugin-name: coblocks
           plugin-version: 2.0.0
           plugin-assets: .wordpress-org
-          svn-username: ${{ secrets.WORDPRESS_ORG_USERNAME }}}
-          svn-password: ${{ secrets.WORDPRESS_ORG_PASSWORD }}}
+          svn-username: ${{ secrets.WORDPRESS_ORG_USERNAME }}
+          svn-password: ${{ secrets.WORDPRESS_ORG_PASSWORD }}
 ```
 
 ---
