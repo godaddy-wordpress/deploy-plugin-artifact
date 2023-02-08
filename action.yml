@@ -1,0 +1,95 @@
+name: 'Deploy WordPress Plugin Artifact'
+
+description: 'Deploys a plugin artifact to the WordPress.org plugin repository.'
+
+author: 'GoDaddy'
+
+branding:
+  icon: code
+  color: gray-dark
+
+inputs:
+  plugin-name:
+    description: 'Plugin directory name (svn.wp-plugins.org/{ plugin-name })'
+    required: true
+  plugin-version:
+    description: 'Semantic version of plugin to deploy'
+    required: true
+  plugin-assets:
+    description: 'Path to plugin assets directory'
+    required: false
+    default: ''
+  deploy-directory:
+    description: 'Directory in which to run the deploys'
+    required: false
+    default: '.wp-plugin-deploy'
+  svn-username:
+    description: 'WordPress.org SVN username'
+    required: true
+  svn-password:
+    description: 'WordPress.org SVN password'
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - name: 'Setup directories'
+      shell: bash
+      run: |
+        DEPLOY_DIRECTORY=${{ inputs.deploy-directory }}
+        mkdir -p $DEPLOY_DIRECTORY
+        echo "DEPLOY_DIRECTORY=$DEPLOY_DIRECTORY" >> $GITHUB_ENV
+        echo "PLUGIN_DIRECTORY=$DEPLOY_DIRECTORY/${{ inputs.plugin-name }}" >> $GITHUB_ENV
+        echo "ARTIFACT_DIRECTORY=$DEPLOY_DIRECTORY/${{ inputs.plugin-name }}-artifact" >> $GITHUB_ENV
+
+    - name: 'Checkout plugin (auth)'
+      shell: bash
+      working-directory: ${{ env.DEPLOY_DIRECTORY }}
+      run: |
+        svn co http://svn.wp-plugins.org/${{ inputs.plugin-name }} \
+          --username ${{ inputs.svn-username }} \
+          --password ${{ inputs.svn-password }} \
+          --depth immediates \
+          --non-interactive \
+          --no-auth-cache
+
+    - name: 'Update plugin configuration'
+      shell: bash
+      working-directory: ${{ env.PLUGIN_DIRECTORY }}
+      run: |
+        svn update -q --set-depth infinity assets
+        svn update -q --set-depth infinity trunk
+
+    - name: 'Sync plugin changes'
+      shell: bash
+      run: |
+        rsync -rc "$ARTIFACT_DIRECTORY/" "$PLUGIN_DIRECTORY/trunk/" --delete --delete-excluded
+
+    - name: 'Sync plugin assets, if provided'
+      if: ${{ inputs.plugin-assets != '' }}
+      shell: bash
+      run: |
+        if [[ -d "${{ inputs.plugin-assets }}/" ]]; then
+          rsync -rc "${{ inputs.plugin-assets }}/" "$PLUGIN_DIRECTORY/assets/" --delete
+        fi
+
+    - name: 'Prepare plugin for deploy'
+      shell: bash
+      working-directory: ${{ env.PLUGIN_DIRECTORY }}
+      run: |
+        svn add . --force > /dev/null
+        svn status | grep '^\!' | sed 's/! *//' | xargs -I% svn rm %@ > /dev/null
+        svn cp "trunk/" "tags/${{ inputs.plugin-version }}" > /dev/null
+        svn update
+        svn status
+
+    - name: 'Deploying changes to WordPress.org repository'
+      shell: bash
+      working-directory: ${{ env.PLUGIN_DIRECTORY }}
+      run: |
+        svn commit \
+          --username ${{ inputs.svn-username }} \
+          --password ${{ inputs.svn-password }} \
+          --message "Deploy version ${{ inputs.plugin-version }}" \
+          --no-auth-cache \
+          --non-interactive
