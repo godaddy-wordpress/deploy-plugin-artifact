@@ -45,14 +45,10 @@ runs:
     - name: 'Checkout plugin (auth)'
       shell: bash
       working-directory: ${{ env.DEPLOY_DIRECTORY }}
-      env:
-        WP_USERNAME: ${{ inputs.svn-username }}
-        WP_PASSWORD: ${{ inputs.svn-password }}
       run: |
         svn co http://svn.wp-plugins.org/${{ inputs.plugin-name }} \
-          --username "$WP_USERNAME" \
-          --password "$WP_PASSWORD" \
           --depth immediates \
+          --no-auth-cache \
           --non-interactive
 
     - name: 'Update plugin configuration'
